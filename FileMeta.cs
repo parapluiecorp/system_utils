@@ -1,54 +1,73 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
 
 class FileMeta
 {
-    static void Main(string[] args)
+    static int Main(string[] args)
     {
         Console.Write("Enter full file path: ");
-        string path = Console.ReadLine();
+        string path = Console.ReadLine()?.Trim();
 
-        if (String.IsNullOrWhiteSpace(path))
+        if (string.IsNullOrWhiteSpace(path))
         {
-            Console.WriteLine("No path provided.");
-            return;
+            Console.Error.WriteLine("Error: No path provided.");
+            return 1;
         }
 
-        if (!File.Exists(path))
-        {
-            Console.WriteLine("File not found.");
-            return;
-        }
-
-        FileInfo info = new FileInfo(path);
-
-        Console.WriteLine("\n=== FILE METADATA ===");
-        Console.WriteLine("Full Name:         " + info.FullName);
-        Console.WriteLine("Name:              " + info.Name);
-        Console.WriteLine("Extension:         " + info.Extension);
-        Console.WriteLine("Size (bytes):      " + info.Length);
-        Console.WriteLine("Created:           " + info.CreationTime);
-        Console.WriteLine("Last Modified:     " + info.LastWriteTime);
-        Console.WriteLine("Last Accessed:     " + info.LastAccessTime);
-        Console.WriteLine("Attributes:        " + info.Attributes);
-
-        // Optional: Hash
-        /*
         try
         {
-            using (var stream = info.OpenRead())
+            if (!File.Exists(path))
             {
-                var sha1 = System.Security.Cryptography.SHA1.Create();
-                var hash = sha1.ComputeHash(stream);
+                Console.Error.WriteLine("Error: File not found.");
+                return 1;
+            }
+
+            FileInfo info = new FileInfo(path);
+
+            Console.WriteLine("\n=== FILE METADATA ===");
+            Console.WriteLine($"Full Name:         {info.FullName}");
+            Console.WriteLine($"Name:              {info.Name}");
+            Console.WriteLine($"Extension:         {info.Extension}");
+            Console.WriteLine($"Size (bytes):      {info.Length}");
+            Console.WriteLine($"Created:           {info.CreationTime}");
+            Console.WriteLine($"Last Modified:     {info.LastWriteTime}");
+            Console.WriteLine($"Last Accessed:     {info.LastAccessTime}");
+            Console.WriteLine($"Attributes:        {info.Attributes}");
+
+            // Optional hash
+            /*
+            try
+            {
+                using var stream = info.OpenRead();
+                using var sha1 = SHA1.Create();
+                byte[] hash = sha1.ComputeHash(stream);
                 Console.WriteLine("SHA1 Hash:         " +
                     BitConverter.ToString(hash).Replace("-", ""));
             }
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine("SHA1 Hash:         (access denied)");
+            }
+            */
+
+            return 0;
         }
-        catch
+        catch (UnauthorizedAccessException)
         {
-            Console.WriteLine("SHA1 Hash:         (access denied)");
+            Console.Error.WriteLine("Error: Access denied.");
+            return 1;
         }
-        */
+        catch (IOException ex)
+        {
+            Console.Error.WriteLine($"I/O Error: {ex.Message}");
+            return 1;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Unexpected error: {ex.Message}");
+            return 1;
+        }
     }
 }
 
